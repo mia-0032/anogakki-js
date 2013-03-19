@@ -5,9 +5,9 @@ $ ->
 		
 		#sinとcosの値をキャッシュしておくため
 		sin = (degrees) ->
-				return Math.sin(degrees / 180 * Math.PI)
+				return Math.sin(degrees / 180.0 * Math.PI)
 		cos = (degrees) ->
-				return Math.cos(degrees / 180 * Math.PI)
+				return Math.cos(degrees / 180.0 * Math.PI)
 		sin = _.memoize(sin)
 		cos = _.memoize(cos)
 		
@@ -20,7 +20,7 @@ $ ->
 				x: null
 				y: null
 				color: null
-				@DELTA_COLOR: 2
+				@DELTA_COLOR: 3
 				@FINISHED_COLOR: 30
 				outer_r: null
 				inner_r: null
@@ -34,13 +34,13 @@ $ ->
 				display: (p) =>
 						p.fill(0, @color, 0);
 						@displayEffect(p);
-						@outer_r += EffectAbstract.DELTA_OUTER_R;
-						@inner_r += EffectAbstract.DELTA_INNER_R;
-						@color -= EffectAbstract.DELTA_COLOR;
+						@outer_r += EffectAbstract.DELTA_OUTER_R
+						@inner_r += EffectAbstract.DELTA_INNER_R
+						@color -= EffectAbstract.DELTA_COLOR
 				displayEffect: (p) =>
 						#abstract function
 				isFinished: () =>
-						return @color < EffectAbstract.FINISHED_COLOR;
+						return @color < EffectAbstract.FINISHED_COLOR
 				getOuterX: (deg) =>
 						return @x - @outer_r * cos(deg)
 				getOuterY: (deg) =>
@@ -52,25 +52,29 @@ $ ->
 						
 		class CircleEffect extends EffectAbstract
 				displayEffect: (p) =>
-						p.beginShape(p.QUADS);
-						p.vertex(@getOuterX(0), @getOuterY(0));
-						p.vertex(@getInnerX(0), @getInnerY(0));
+						p.beginShape(p.QUADS)
+						p.vertex(@getOuterX(0), @getOuterY(0))
+						p.vertex(@getInnerX(0), @getInnerY(0))
 						
-						for deg in [10...360] by 10
-								p.vertex(@getInnerX(deg), @getInnerY(deg));
-								p.vertex(@getOuterX(deg), @getOuterY(deg));
-								p.vertex(@getOuterX(deg), @getOuterY(deg));
-								p.vertex(@getInnerX(deg), @getInnerY(deg));
+						for deg in [10...360] by 7
+								#描画を少し重ねて隙間をなくす
+								p.vertex(@getInnerX(deg + 1), @getInnerY(deg + 1))
+								p.vertex(@getOuterX(deg + 1), @getOuterY(deg + 1))
+								p.vertex(@getOuterX(deg), @getOuterY(deg))
+								p.vertex(@getInnerX(deg), @getInnerY(deg))
 								
-						p.vertex(@getInnerX(0), @getInnerY(0));
-						p.vertex(@getOuterX(0), @getOuterY(0));
-						p.endShape();
-				
-		canvas = $("#processing")[0]
+						p.vertex(@getInnerX(0), @getInnerY(0))
+						p.vertex(@getOuterX(0), @getOuterY(0))
+						p.endShape()
+		
 		effects = []
+		addEffect = (x, y) ->
+				effects.push(new CircleEffect(x, y))
+		
 		ano = (p) ->
 				p.setup = () ->
 						p.size(1366*2, 700, p.P2D)
+						p.noStroke()
 				p.draw = () ->
 						p.background(0)
 						next_effects = []
@@ -78,6 +82,10 @@ $ ->
 								effect.display(p)
 								unless effect.isFinished() then next_effects.push(effect)
 						effects = next_effects
-				p.mousePressed = () ->
-						effects.push(new CircleEffect(p.mouseX, p.mouseY))
-		processing = new Processing(canvas, ano)
+						
+		$canvas = $("#processing")
+		$canvas.bind('click',(event) ->
+				echo(event.offsetX, event.offsetY)
+				addEffect(event.offsetX, event.offsetY)
+		)
+		processing = new Processing($canvas[0], ano)

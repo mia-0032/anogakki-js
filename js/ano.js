@@ -4,17 +4,17 @@ var __slice = [].slice,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
 $(function() {
-  var CircleEffect, EffectAbstract, ano, canvas, cos, deg, echo, effects, processing, sin, _i;
+  var $canvas, CircleEffect, EffectAbstract, addEffect, ano, cos, deg, echo, effects, processing, sin, _i;
   echo = function() {
     var value;
     value = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
     return console.log(value);
   };
   sin = function(degrees) {
-    return Math.sin(degrees / 180 * Math.PI);
+    return Math.sin(degrees / 180.0 * Math.PI);
   };
   cos = function(degrees) {
-    return Math.cos(degrees / 180 * Math.PI);
+    return Math.cos(degrees / 180.0 * Math.PI);
   };
   sin = _.memoize(sin);
   cos = _.memoize(cos);
@@ -31,7 +31,7 @@ $(function() {
 
     EffectAbstract.prototype.color = null;
 
-    EffectAbstract.DELTA_COLOR = 2;
+    EffectAbstract.DELTA_COLOR = 3;
 
     EffectAbstract.FINISHED_COLOR = 30;
 
@@ -114,9 +114,9 @@ $(function() {
       p.beginShape(p.QUADS);
       p.vertex(this.getOuterX(0), this.getOuterY(0));
       p.vertex(this.getInnerX(0), this.getInnerY(0));
-      for (deg = _j = 10; _j < 360; deg = _j += 10) {
-        p.vertex(this.getInnerX(deg), this.getInnerY(deg));
-        p.vertex(this.getOuterX(deg), this.getOuterY(deg));
+      for (deg = _j = 10; _j < 360; deg = _j += 7) {
+        p.vertex(this.getInnerX(deg + 1), this.getInnerY(deg + 1));
+        p.vertex(this.getOuterX(deg + 1), this.getOuterY(deg + 1));
         p.vertex(this.getOuterX(deg), this.getOuterY(deg));
         p.vertex(this.getInnerX(deg), this.getInnerY(deg));
       }
@@ -128,13 +128,16 @@ $(function() {
     return CircleEffect;
 
   })(EffectAbstract);
-  canvas = $("#processing")[0];
   effects = [];
+  addEffect = function(x, y) {
+    return effects.push(new CircleEffect(x, y));
+  };
   ano = function(p) {
     p.setup = function() {
-      return p.size(1366 * 2, 700, p.P2D);
+      p.size(1366 * 2, 700, p.P2D);
+      return p.noStroke();
     };
-    p.draw = function() {
+    return p.draw = function() {
       var effect, i, next_effects, _j, _len;
       p.background(0);
       next_effects = [];
@@ -147,9 +150,11 @@ $(function() {
       }
       return effects = next_effects;
     };
-    return p.mousePressed = function() {
-      return effects.push(new CircleEffect(p.mouseX, p.mouseY));
-    };
   };
-  return processing = new Processing(canvas, ano);
+  $canvas = $("#processing");
+  $canvas.bind('click', function(event) {
+    echo(event.offsetX, event.offsetY);
+    return addEffect(event.offsetX, event.offsetY);
+  });
+  return processing = new Processing($canvas[0], ano);
 });
