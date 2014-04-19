@@ -1,2 +1,2 @@
 動作サンプルURL：
-http://diy.sakura.ne.jp/ano_gakki/
+http://mia-0032.github.io/anogakki_js/
